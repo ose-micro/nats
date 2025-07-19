@@ -6,13 +6,13 @@ services:
     container_name: nats
     restart: unless-stopped
     ports:
-      - "4222:4222" # Client connections
-      - "8222:8222" # HTTP monitoring
+      - "42221:4222" # Client connections
+      - "82221:8222" # HTTP monitoring
     command: [
       "-js",                         # Enable JetStream
       "-DV",                         # Enable debug & trace
       "--store_dir", "/data/jetstream",
-      "--http_port", "8222"
+      "--http_port", "82221"
     ]
     volumes:
       - nats_data:/data
