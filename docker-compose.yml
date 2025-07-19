@@ -1,24 +1,11 @@
-version: '3.8'
-
+version: "3.8"
 services:
   nats:
     build: .
     ports:
-      - "4222:4222"   # Client port
-      - "8222:8222"   # Monitoring port
-    command: [
-      "-js",                         # Enable JetStream
-      "-DV",                         # Enable debug & trace
-      "--store_dir", "/data/jetstream",
-      "--http_port", "8222"
-    ]
-    volumes:
-      - nats_data:/data
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8222/"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-
-volumes:
-  nats_data:
+      - "4222:4222"   # NATS clients
+      - "8222:8222"   # Monitoring
+      - "6222:6222"   # Cluster
+    command: >
+      -js
+      -m 8222
