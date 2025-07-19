@@ -2,17 +2,20 @@
 version: '3.8'
 services:
   nats:
-    image: nats:2.10-alpine
+    image: nats:latest
+    container_name: nats
+    restart: unless-stopped
     ports:
-      - "4222:4222"   # client
-      - "8222:8222"   # monitoring
-      - "6222:6222"   # route
+      - "4222:4222" # Client connections
+      - "8222:8222" # HTTP monitoring
     command: [
-      "-js",                         # enable JetStream
-      "-sd", "/data/jetstream",     # store directory
+      "-js",                         # Enable JetStream
+      "-DV",                         # Enable debug & trace
+      "--store_dir", "/data/jetstream",
       "--http_port", "8222"
     ]
     volumes:
       - nats_data:/data
+      
 volumes:
   nats_data:
