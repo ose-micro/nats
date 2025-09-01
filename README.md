@@ -1,4 +1,4 @@
-# NATS + JetStream on Railway
+# NATS + JetStream
 
 This is a minimal setup for running NATS with JetStream enabled on Railway using Docker Compose.
 
