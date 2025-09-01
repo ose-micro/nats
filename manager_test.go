@@ -25,10 +25,10 @@ func TestPublish(t *testing.T) {
 	}
 
 	bus, err := New(Config{
-		Url:          "nats://switchback.proxy.rlwy.net:40255",
+		Url:          "nats://turntable.proxy.rlwy.net:58598",
 		Name:         "Ose Nats",
-		User:         "${NATS_USER}",
-		Password:     "${NATS_PASS}",
+		User:         "",
+		Password:     "",
 		Timeout:      2 * time.Second,
 		MaxReconnect: 5,
 	}, log, tracer)
