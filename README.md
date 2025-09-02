@@ -1,10 +1,13 @@
 # NATS Bus
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/ose-micro/nats.svg)](https://pkg.go.dev/github.com/ose-micro/nats)
+[![Go Report Card](https://goreportcard.com/badge/github.com/ose-micro/nats)](https://goreportcard.com/report/github.com/ose-micro/nats)
+[![License](https://img.shields.io/github/license/ose-micro/nats)](LICENSE)
+
 > A wrapper around NATS JetStream
 providing simple helpers for publishing, subscribing, and stream management.
 
 ## Features
-
  - Publish data as []byte, string, or any Go struct (auto JSON marshal). 
  - EnsureStream to create streams on the fly if they don’t exist. 
  - Subscribe with durable consumers, manual ack, and error handling. 
@@ -46,8 +49,8 @@ func main() {
 	bus, err := New(Config{
 		Url:          "nats://turntable.proxy.rlwy.net:58598",
 		Name:         "Ose Nats",
-		User:         "",
-		Password:     "",
+		User:         "nats",
+		Password:     "supersecret",
 		Timeout:      2 * time.Second,
 		MaxReconnect: 5,
 	}, log, tracer)
