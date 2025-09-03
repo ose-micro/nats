@@ -30,7 +30,6 @@ func (n *natsBus) Publish(subject string, data any) error {
 	_, err = n.js.Publish(subject, payload)
 	return err
 }
-
 func (n *natsBus) EnsureStream(name string, subjects ...string) error {
 	if name == "" {
 		return fmt.Errorf("stream name required")
@@ -40,26 +39,51 @@ func (n *natsBus) EnsureStream(name string, subjects ...string) error {
 	}
 
 	// Check if stream exists
-	_, err := n.js.StreamInfo(name)
-	if err == nil {
-		return nil
-	}
-
-	// Create stream
-	_, err = n.js.AddStream(&nats.StreamConfig{
-		Name:      name,
-		Subjects:  subjects,
-		Storage:   nats.FileStorage,
-		Replicas:  1,
-		Retention: nats.LimitsPolicy,
-		MaxMsgs:   -1,
-		MaxBytes:  -1,
-	})
+	stream, err := n.js.StreamInfo(name)
 	if err != nil {
-		return fmt.Errorf("add stream: %w", err)
+		// Stream does not exist → create it
+		_, err = n.js.AddStream(&nats.StreamConfig{
+			Name:      name,
+			Subjects:  subjects,
+			Storage:   nats.FileStorage,
+			Replicas:  1,
+			Retention: nats.LimitsPolicy,
+			MaxMsgs:   -1,
+			MaxBytes:  -1,
+		})
+		if err != nil {
+			return fmt.Errorf("add stream: %w", err)
+		}
+	} else {
+		// Merge existing subjects with new subjects
+		subjectMap := map[string]struct{}{}
+		for _, s := range stream.Config.Subjects {
+			subjectMap[s] = struct{}{}
+		}
+		for _, s := range subjects {
+			subjectMap[s] = struct{}{}
+		}
+
+		mergedSubjects := make([]string, 0, len(subjectMap))
+		for s := range subjectMap {
+			mergedSubjects = append(mergedSubjects, s)
+		}
+
+		_, err = n.js.UpdateStream(&nats.StreamConfig{
+			Name:      name,
+			Subjects:  mergedSubjects,
+			Storage:   nats.FileStorage,
+			Replicas:  1,
+			Retention: nats.LimitsPolicy,
+			MaxMsgs:   -1,
+			MaxBytes:  -1,
+		})
+		if err != nil {
+			return fmt.Errorf("update stream: %w", err)
+		}
 	}
 
-	log.Printf("✅ Created stream %s with subjects %v", name, subjects)
+	log.Printf("✅ Stream ensured/updated: %s", name)
 	return nil
 }
 
