@@ -108,18 +108,18 @@ func (n *natsBus) Subscribe(subject string, durable string, handler func(ctx con
 		nats.MaxAckPending(1000),
 	)
 	if err != nil {
-		return ose_error.New(ose_error.ErrInternal, err.Error())
+		return ose_error.Wrap(err, ose_error.ErrInternalServerError, err.Error())
 	}
 
 	// Ensure subscription is flushed to server
 	if err := n.nc.Flush(); err != nil {
 		n.log.Error("NATS flush failed", "error", err)
-		return err
+		return ose_error.Wrap(err, ose_error.ErrInternalServerError, err.Error())
 	}
 
 	if lastErr := n.nc.LastError(); lastErr != nil {
 		n.log.Error("NATS connection error after subscribe", "error", lastErr)
-		return lastErr
+		return ose_error.Wrap(lastErr, ose_error.ErrInternalServerError, lastErr.Error())
 	}
 
 	n.log.Info("Subscribed to subject", "subject", subject, "durable", durable)
