@@ -1,4 +1,4 @@
-package nats
+package nats_test
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 
 	"github.com/ose-micro/core/logger"
 	"github.com/ose-micro/core/tracing"
+	"github.com/ose-micro/nats"
 )
 
 func TestPublish(t *testing.T) {
@@ -24,11 +25,11 @@ func TestPublish(t *testing.T) {
 		t.Error(err)
 	}
 
-	bus, err := New(Config{
-		Url:          "nats://turntable.proxy.rlwy.net:58598",
-		Name:         "Ose Nats",
-		User:         "",
-		Password:     "",
+	bus, err := nats.New(nats.Config{
+		Url:          "nats://localhost:4222",
+		Name:         "ose",
+		User:         "moriba",
+		Password:     "yT7f9hK3vLqP8dX2bHcM",
 		Timeout:      2 * time.Second,
 		MaxReconnect: 5,
 	}, log, tracer)
@@ -48,7 +49,7 @@ func TestPublish(t *testing.T) {
 		t.Error(err)
 	}
 
-	err = bus.Subscribe("events.created", "ose", func(ctx context.Context, data any) error {
+	err = bus.Subscribe("events.created", "ose-queue", "ose", func(ctx context.Context, data any) error {
 		t.Log(data)
 
 		return nil

@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/nats-io/nats.go"
-	ose_error "github.com/ose-micro/error"
 )
 
 func (n *natsBus) Publish(subject string, data any) error {
@@ -63,42 +62,68 @@ func (n *natsBus) EnsureStream(name string, subjects ...string) error {
 	return nil
 }
 
-func (n *natsBus) Subscribe(subject string, durable string, handler func(ctx context.Context, data any) error) error {
-	_, err := n.js.Subscribe(subject, func(msg *nats.Msg) {
-		ctx := context.Background()
+func (n *natsBus) Subscribe(subject string, durable, queue string, handler func(ctx context.Context, data any) error) error {
+	var err error
+	var sub *nats.Subscription
 
-		var data any
-		if err := json.Unmarshal(msg.Data, &data); err != nil {
-			data = string(msg.Data)
-		}
+	if queue != "" {
+		sub, err = n.js.QueueSubscribe(subject, queue, func(msg *nats.Msg) {
+			ctx := context.Background()
 
-		if herr := handler(ctx, data); herr == nil {
-			_ = msg.Ack()
-		} else {
-			_ = msg.Nak()
-		}
-	},
-		nats.Durable(durable),
-		nats.ManualAck(),
-		nats.AckWait(30*time.Second),
-		nats.MaxAckPending(1000),
-	)
+			var data any
+			if err := json.Unmarshal(msg.Data, &data); err != nil {
+				data = string(msg.Data)
+			}
+
+			if herr := handler(ctx, data); herr == nil {
+				_ = msg.Ack()
+			} else {
+				_ = msg.Nak()
+			}
+		},
+			nats.Durable(durable),
+			nats.ManualAck(),
+			nats.AckWait(30*time.Second),
+			nats.MaxAckPending(1000),
+		)
+	} else {
+		sub, err = n.js.Subscribe(subject, func(msg *nats.Msg) {
+			ctx := context.Background()
+
+			var data any
+			if err := json.Unmarshal(msg.Data, &data); err != nil {
+				data = string(msg.Data)
+			}
+
+			if herr := handler(ctx, data); herr == nil {
+				_ = msg.Ack()
+			} else {
+				_ = msg.Nak()
+			}
+		},
+			nats.Durable(durable),
+			nats.ManualAck(),
+			nats.AckWait(30*time.Second),
+			nats.MaxAckPending(1000),
+		)
+	}
 	if err != nil {
-		return ose_error.New(ose_error.ErrInternal, err.Error())
+		n.log.Error("Fail to subscribe", "error", err)
+		return err
 	}
 
-	// Ensure subscription is flushed to server
+	// Flush subscription
 	if err := n.nc.Flush(); err != nil {
 		n.log.Error("NATS flush failed", "error", err)
 		return err
 	}
-
 	if lastErr := n.nc.LastError(); lastErr != nil {
 		n.log.Error("NATS connection error after subscribe", "error", lastErr)
 		return lastErr
 	}
 
-	n.log.Info("Subscribed to subject", "subject", subject, "durable", durable)
+	n.log.Info("Subscribed to subject", "subject", subject, "durable", durable, "queue", queue)
+	_ = sub
 
 	return nil
 }

@@ -4,8 +4,7 @@ go 1.25.0
 
 require (
 	github.com/nats-io/nats.go v1.45.0
-	github.com/ose-micro/core v0.3.6
-	github.com/ose-micro/error v0.0.0-20250827220005-c4271c27c5aa
+	github.com/ose-micro/core v0.4.0
 )
 
 require (
